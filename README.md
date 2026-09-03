@@ -332,12 +332,17 @@ Use high-value transaction analysis as one input into transaction monitoring and
 
 ## 9. Project Structure
 
-```text
 bank-transaction-analytics-snowflake-sql/
 │
 ├── README.md
+├── bank_transaction_analysis.sql
 │
-└── bank_transaction_analysis.sql
+└── screenshots/
+    ├── overall_kpis
+    └── geographic_analysis
+
+
+
 ```
 
 ### SQL File Structure
