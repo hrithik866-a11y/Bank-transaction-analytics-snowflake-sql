@@ -1,143 +1,334 @@
-# Bank-transaction-analytics-snowflake-sql
-Bank transaction analytics project using Snowflake SQL to analyze card spending, customer behavior, merchant performance, geographic trends, and transaction pattern
+# Bank Transaction Analytics Using Snowflake SQL
 
 ## 1. Business Problem
 
 A bank has a large volume of transaction data but needs to understand how customers are using their cards, where spending is concentrated, which merchants generate the most transaction activity, and what spending patterns can support better business decisions.
 
-This project uses transaction data to transform raw banking records into meaningful business insights using Snowflake SQL.
+This project uses **Snowflake SQL** to transform raw banking transaction data into meaningful business insights.
+
+---
 
 ## 2. Business Objectives
 
-The analysis aims to answer the following business questions:
+The project aims to answer the following business questions:
 
 * Which cards generate the highest spending?
 * Which cards are used most frequently?
 * Does higher transaction frequency lead to higher spending?
-* How does customer spending change over time?
+* Which merchants generate the most transaction activity?
+* Which merchants account for the highest spending?
 * Which states and cities generate the most spending?
-* Which merchants have the highest transaction activity and spending?
-* When are customers most active?
-* Where are high-value transactions occurring?
-* What are the key overall transaction KPIs?
+* How does spending change over time?
+* Are customers more active on weekdays or weekends?
+* Which days have the highest transaction activity?
+* Where are high-value transactions concentrated?
+* What are the overall transaction and spending KPIs?
+
+---
 
 ## 3. Dataset Overview
 
-The dataset contains **20,000 banking transactions** covering the period from **January 2023 to October 2025**.
+The dataset contains banking card transaction records.
 
-### Key Metrics
+### Dataset Statistics
 
-| Metric                    |               Value |
-| ------------------------- | ------------------: |
-| Total Transactions        |              20,000 |
-| Unique Cards              |              10,030 |
-| Unique Merchants          |                 500 |
-| Total Spending            |             ₹61.65M |
-| Average Transaction Value |           ₹3,082.29 |
-| Highest Transaction       |          ₹19,806.63 |
-| Transaction Period        | Jan 2023 – Oct 2025 |
+| Metric                    |      Value |
+| ------------------------- | ---------: |
+| Total Transactions        |     20,000 |
+| Unique Cards              |     10,030 |
+| Unique Merchants          |        500 |
+| Total Spending            |    ₹61.65M |
+| Average Transaction Value |  ₹3,082.29 |
+| Highest Transaction       | ₹19,806.63 |
+| First Transaction         | 2023-01-01 |
+| Last Transaction          | 2025-10-31 |
 
-## 4. Tools & Technologies
+### Important Columns
 
-* **Snowflake** — Data storage and SQL analysis
-* **SQL** — Data cleaning, aggregation, analysis and business insights
-* **GitHub** — Project documentation and version control
+* `TRANSACTION_ID` – Unique transaction identifier
+* `CARD_ID` – Card identifier
+* `AMOUNT` – Transaction amount
+* `DATE` – Transaction date
+* `MERCHANT_ID` – Merchant identifier
+* `MERCHANT_CITY` – Merchant location
+* `MERCHANT_STATE` – Merchant state
+* `CURRENT_AGE` – Customer age
+* `BIRTH_YEAR` – Customer birth year
+
+> Note: The dataset does not contain a `CUSTOMER_ID`. Therefore, `CARD_ID` is used as the primary identifier for card-level behavioral analysis.
+
+---
+
+## 4. Snowflake Data Setup
+
+The transaction dataset was loaded into **Snowflake** for data preparation, validation, and SQL-based analysis.
+
+### Database Structure
+
+```text
+BANK_ANALYTICS
+└── RAW_DATA
+    └── TRANSACTIONS
+```
+
+### Data Preparation
+
+The dataset was:
+
+* Loaded into Snowflake
+* Stored in the `RAW_DATA` schema
+* Validated for NULL values
+* Checked for duplicate records
+* Checked for invalid transaction amounts
+* Validated customer age and birth year
+* Checked transaction date coverage
+* Checked for future transaction dates
+
+---
 
 ## 5. Data Quality Analysis
 
-Before performing business analysis, the dataset was checked for data quality issues including:
+Before performing business analysis, the dataset was validated to ensure the transaction records were suitable for analysis.
 
-* Record completeness
-* NULL values
-* Duplicate transaction IDs
-* Duplicate records
-* Invalid transaction amounts
-* Invalid ages
-* Invalid birth years
-* Age and birth-year consistency
-* Transaction date coverage
-* Future transaction dates
+### Checks Performed
 
-The data quality checks confirmed that the dataset was suitable for further analysis.
+#### NULL Value Check
+
+Checked important fields including:
+
+* `CARD_ID`
+* `TRANSACTION_ID`
+* `AMOUNT`
+* `MERCHANT_ID`
+* `MERCHANT_CITY`
+* `MERCHANT_STATE`
+
+**Result:** No NULL values were identified in the checked fields.
+
+#### Transaction Amount Validation
+
+Checked for zero or negative transaction amounts.
+
+| Metric               |     Result |
+| -------------------- | ---------: |
+| Minimum Amount       |    ₹105.16 |
+| Maximum Amount       | ₹19,806.63 |
+| Non-Positive Amounts |          0 |
+
+**Insight:** All transaction amounts are positive and fall within the observed range.
+
+#### Age Validation
+
+Customer ages were checked for unrealistic values.
+
+**Result:** No invalid ages were identified.
+
+#### Birth Year Validation
+
+Birth years were checked for unrealistic values.
+
+**Result:** No invalid birth years were identified.
+
+#### Age vs Birth Year Consistency
+
+Customer age was compared against birth year to identify inconsistencies.
+
+**Result:** No inconsistencies were identified based on the validation logic.
+
+#### Transaction Date Validation
+
+The transaction date range was checked.
+
+* Earliest transaction: **2023-01-01**
+* Latest transaction: **2025-10-31**
+* Unique transaction dates: **1,035**
+
+**Result:** The dataset covers transactions across multiple years.
+
+---
 
 ## 6. Business Analysis
 
-The transaction data was analyzed across the following areas:
+### 6.1 Card Analysis
 
-### Card Analysis
+Card-level analysis was performed to understand customer/card spending behavior.
 
-* Most valuable cards
-* Most frequently used cards
-* Card usage frequency vs spending
+#### Key Analyses
 
-### Spending Analysis
+* Top cards by total spending
+* Card transaction frequency
+* Spending by usage frequency
+* Average transaction value by usage group
 
-* Monthly spending trends
-* Month-over-month spending changes
-* Spending ranges
-* High-value transactions
+### Key Insight
 
-### Geographic Analysis
+Most spending comes from **low- and medium-frequency cards**, while high-frequency cards represent a relatively small portion of the card base.
 
-* State-level spending
-* City-level spending
-* Average transaction value by location
+High-frequency cards also have a slightly lower average transaction value, suggesting that **frequent card usage does not necessarily result in higher-value transactions**.
 
-### Merchant Analysis
+---
 
-* Merchant transaction volume
-* Merchant total spending
-* Merchant average transaction value
-* Merchant spending concentration
+### 6.2 Merchant Analysis
 
-### Time Analysis
+Merchant-level analysis was performed to identify merchants with the highest transaction activity and spending.
 
-* Weekday vs weekend spending
-* Day-of-week transaction activity
+#### Key Analyses
+
+* Top merchants by transaction volume
+* Top merchants by total spending
+* Spending concentration among the top 10 merchants
+* Merchant performance by city and state
+
+### Key Insight
+
+Merchant activity is distributed across a large number of merchants rather than being dominated by a small number of merchants.
+
+---
+
+### 6.3 Geographic Analysis
+
+Transaction activity was analyzed across states and cities.
+
+#### Top State by Spending
+
+**Maharashtra**
+
+* Transactions: 4,132
+* Total spending: ₹12.75M
+* Average transaction: ₹3,085.16
+
+#### Top City by Spending
+
+**Surat**
+
+* Transactions: 1,761
+* Total spending: ₹5.45M
+* Average transaction: ₹3,094.01
+
+#### Highest Average Transaction Value
+
+Among the major cities analyzed, **Ahmedabad** had the highest average transaction value at approximately **₹3,175.71**.
+
+### Key Insight
+
+Maharashtra leads overall spending largely because of its higher transaction volume, while Gujarat shows strong average transaction values.
+
+---
+
+### 6.4 Spending Analysis
+
+Transaction amounts were grouped into spending ranges to understand the distribution of transaction sizes.
+
+The analysis also examined monthly spending patterns.
+
+#### Monthly Analysis
+
+Monthly spending was calculated using `DATE_TRUNC()` to aggregate individual transaction dates into monthly periods.
+
+Month-over-month spending changes were also calculated using the `LAG()` window function.
+
+### Key Insight
+
+Monthly spending fluctuates over time rather than following a consistent long-term upward or downward trend.
+
+The largest monthly increase observed was approximately **21.58%**, while the largest decline was approximately **17.82%**.
+
+---
+
+### 6.5 Time-Based Analysis
+
+Transaction activity was compared between weekdays and weekends.
+
+| Day Type | Transactions | Total Spending | Avg Transaction |
+| -------- | -----------: | -------------: | --------------: |
+| Weekday  |       17,150 |        ₹53.05M |       ₹3,093.41 |
+| Weekend  |        2,850 |         ₹8.59M |       ₹3,015.36 |
+
+### Key Insight
+
+Weekdays account for the majority of transaction activity and spending.
+
+Among individual days:
+
+* **Sunday** had the highest total spending.
+* **Tuesday** had the highest average transaction value.
+* **Monday** had the lowest average transaction value.
+
+---
+
+### 6.6 High-Value Transaction Analysis
+
+Transactions of **₹10,000 or more** were analyzed separately to understand high-value spending patterns.
+
+### Key Findings
+
+* Maharashtra had the highest number of high-value transactions.
+* Uttar Pradesh contained the highest individual transaction at **₹19,806.63**.
+* Karnataka had the highest average transaction value among the states with high-value transactions.
+
+> High-value transactions are not automatically considered fraudulent. This analysis only identifies large-value transactions for business analysis.
+
+---
 
 ## 7. Key Business Insights
 
-### Card Behavior
+The analysis produced the following major insights:
 
-The highest-spending card generated **₹33,743.72 from only 4 transactions**, demonstrating that transaction frequency alone does not determine card value.
+### 1. Spending is concentrated among low- and medium-frequency cards
 
-Low-frequency cards contributed the largest share of spending, while high-frequency cards represented a relatively small portion of the card base.
+The majority of total spending comes from cards with relatively low or medium transaction frequency.
 
-### Geographic Performance
+### 2. Transaction frequency does not guarantee higher transaction value
 
-**Maharashtra** generated the highest total spending at approximately **₹12.75M**, largely driven by its high transaction volume.
+High-frequency cards have a slightly lower average transaction value compared with low- and medium-frequency cards.
 
-**Gujarat** recorded the highest average transaction value at approximately **₹3,128**.
+### 3. Maharashtra is the leading state
 
-At the city level, **Surat** recorded the highest total spending at approximately **₹5.45M**.
+Maharashtra generates the highest transaction volume and total spending in the dataset.
 
-### Spending Trends
+### 4. Surat is the leading city by spending
 
-Monthly spending fluctuated throughout the analysis period rather than showing a consistent long-term upward or downward trend.
+Surat records the highest total spending among the cities analyzed.
 
-The largest month-over-month increase occurred in **March 2023 (+21.58%)**, while the largest decline occurred in **February 2023 (-17.82%)**.
+### 5. Weekdays dominate transaction activity
 
-### Time-Based Behavior
+Most transactions and spending occur during weekdays.
 
-Weekdays accounted for the majority of transactions and spending.
+### 6. Spending varies considerably month to month
 
-**Sunday** recorded the highest total spending among individual days, while **Tuesday** recorded the highest average transaction value.
+Monthly spending shows fluctuations rather than a consistent growth trend.
 
-### High-Value Transactions
+### 7. High-value transactions are geographically distributed
 
-Transactions above **₹10,000** were analyzed to understand high-value spending behavior.
+Large transactions occur across multiple states, with Maharashtra having the highest number of transactions above ₹10,000.
 
-**Maharashtra** recorded the highest number of high-value transactions, while the largest individual transaction was **₹19,806.63 in Uttar Pradesh**.
+---
 
 ## 8. Business Recommendations
 
-Based on the analysis:
+Based on the analysis, the bank could consider the following actions:
 
-1. **Target high-value cardholders** with premium rewards and personalized offers rather than relying only on transaction frequency.
-2. **Focus regional strategies** on high-spending markets such as Maharashtra and high-average-value markets such as Gujarat.
-3. **Strengthen merchant partnerships** with merchants generating consistently high transaction volumes and spending.
-4. **Use spending patterns for campaign timing**, particularly around periods and days with higher transaction activity.
-5. **Monitor high-value transactions** as a separate segment for deeper customer and transaction-level analysis.
+### Customer Engagement
+
+Target low- and medium-frequency cardholders with personalized offers and campaigns to encourage increased card usage.
+
+### High-Value Customer Programs
+
+Identify cards with consistently high total spending and consider premium rewards or loyalty programs.
+
+### Geographic Campaigns
+
+Focus marketing and card acquisition strategies on high-performing states and cities such as Maharashtra, Gujarat, and Surat.
+
+### Merchant Partnerships
+
+Explore partnerships with high-volume and high-spending merchants to develop cashback, rewards, or co-branded campaigns.
+
+### Transaction Monitoring
+
+Use high-value transaction analysis as one input into transaction monitoring and risk-analysis systems, while combining it with additional behavioral and fraud-related signals.
+
+---
 
 ## 9. Project Structure
 
@@ -149,8 +340,48 @@ bank-transaction-analytics-snowflake-sql/
 └── bank_transaction_analysis.sql
 ```
 
-## 10. Conclusion
+### SQL File Structure
 
-This project demonstrates how Snowflake SQL can be used to move from raw transaction data to actionable business insights.
+```text
+00. DATABASE & TABLE SETUP
+01. DATA QUALITY
+02. CARD ANALYSIS
+03. MERCHANT ANALYSIS
+04. GEOGRAPHIC ANALYSIS
+05. SPENDING ANALYSIS
+06. TIME-BASED ANALYSIS
+07. HIGH-VALUE TRANSACTION ANALYSIS
+08. OVERALL KPIs
+```
 
-The analysis highlights card spending behavior, transaction frequency, geographic performance, merchant activity, time-based patterns, and high-value transactions to support data-driven banking decisions.
+---
+
+## 10. Technologies Used
+
+* **Snowflake** – Data storage and SQL analysis
+* **SQL** – Data validation, transformation, aggregation, and analysis
+* **GitHub** – Project documentation and version control
+
+---
+
+## 11. Conclusion
+
+This project demonstrates how **Snowflake SQL** can be used to transform raw banking transaction data into actionable business insights.
+
+The analysis covers data quality validation, card behavior, merchant performance, geographic spending, transaction trends, time-based patterns, high-value transactions, and overall business KPIs.
+
+The project demonstrates practical SQL skills including:
+
+* Aggregations
+* `GROUP BY`
+* `CASE` statements
+* CTEs
+* Window functions
+* `LAG()`
+* Date functions
+* `DATE_TRUNC()`
+* Data quality validation
+* Business KPI analysis
+
+The findings can support decisions related to **customer engagement, merchant partnerships, geographic targeting, and transaction monitoring**.
+
